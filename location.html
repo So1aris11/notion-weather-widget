@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>我的位置</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: -apple-system, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+    background: #ffffff;
+    display: flex;
+    justify-content: center;
+    padding: 12px;
+    color: #1d1d1f;
+  }
+
+  .card {
+    width: 480px;
+    max-width: 100%;
+    height: 280px;
+    border: 1px solid #ececf0;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 2px 12px rgba(0,0,0,.04);
+    position: relative;
+  }
+
+  #map { width: 100%; height: 100%; }
+
+  /* 顶部信息条 */
+  .info {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    right: 52px;
+    z-index: 500;
+    background: rgba(255,255,255,.92);
+    backdrop-filter: blur(4px);
+    border-radius: 10px;
+    padding: 7px 12px;
+    font-size: 12px;
+    box-shadow: 0 1px 6px rgba(0,0,0,.12);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .info .sub { color: #8a8a8e; font-size: 10.5px; margin-top: 1px; }
+
+  /* 刷新按钮 */
+  .refresh {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    z-index: 500;
+    width: 32px;
+    height: 32px;
+    border: none;
+    border-radius: 10px;
+    background: rgba(255,255,255,.92);
+    box-shadow: 0 1px 6px rgba(0,0,0,.12);
+    font-size: 15px;
+    cursor: pointer;
+  }
+  .refresh:hover { background: #fff; }
+
+  /* 当前位置脉冲点 */
+  .dot {
+    width: 14px; height: 14px;
+    background: #1d4ed8;
+    border: 3px solid #fff;
+    border-radius: 50%;
+    box-shadow: 0 0 0 2px rgba(29,78,216,.4);
+  }
+  .pulse {
+    position: absolute;
+    width: 14px; height: 14px;
+    border-radius: 50%;
+    background: rgba(29,78,216,.35);
+    animation: pulse 2s ease-out infinite;
+  }
+  @keyframes pulse {
+    from { transform: scale(1); opacity: 1; }
+    to   { transform: scale(3.2); opacity: 0; }
+  }
+</style>
+</head>
+<body>
+  <div class="card">
+    <div id="map"></div>
+    <div class="info">
+      <div id="place">定位中…</div>
+      <div class="sub" id="coords"></div>
+    </div>
+    <button class="refresh" id="btnRefresh" title="重新定位">↻</button>
+  </div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+const $ = id => document.getElementById(id);
+
+const map = L.map('map', { zoomControl: false, attributionControl: false })
+  .setView([35.0, 105.0], 4);
+L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(map);
+L.control.attribution({ prefix: false }).addAttribution('© OpenStreetMap').addTo(map);
+
+let marker = null, circle = null;
+
+function dotIcon() {
+  return L.divIcon({
+    className: '',
+    html: '<div style="position:relative"><div class="pulse"></div><div class="dot"></div></div>',
+    iconSize: [14, 14],
+    iconAnchor: [7, 7],
+  });
+}
+
+function show(lat, lon, accuracy, source) {
+  map.setView([lat, lon], 15);
+  if (marker) { marker.remove(); circle && circle.remove(); }
+  marker = L.marker([lat, lon], { icon: dotIcon() }).addTo(map);
+  if (accuracy) circle = L.circle([lat, lon], { radius: accuracy, weight: 1, color: '#1d4ed8', fillOpacity: 0.08 }).addTo(map);
+
+  $('coords').textContent = `${lat.toFixed(5)}, ${lon.toFixed(5)} · ${source} · ${new Date().toLocaleTimeString('zh-CN')}`;
+
+  // 逆地理编码（失败就静默，只显示坐标）
+  fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=jsonv2&accept-language=zh`)
+    .then(r => r.json())
+    .then(d => {
+      const a = d.address || {};
+      $('place').textContent = [a.city || a.town || a.county, a.suburb || a.road].filter(Boolean).join(' · ') || d.display_name.split(',')[0];
+    })
+    .catch(() => { $('place').textContent = '当前位置'; });
+}
+
+function locate() {
+  $('place').textContent = '定位中…';
+  $('coords').textContent = '';
+
+  if (!navigator.geolocation) { fallbackIP(); return; }
+  navigator.geolocation.getCurrentPosition(
+    pos => show(pos.coords.latitude, pos.coords.longitude, pos.coords.accuracy, '精确定位'),
+    () => fallbackIP(),
+    { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 }
+  );
+}
+
+function fallbackIP() {
+  // iframe 不授权定位时的兜底：IP 定位（城市级，走代理时会显示节点位置）
+  fetch('https://freeipapi.com/api/json')
+    .then(r => r.json())
+    .then(d => show(d.latitude, d.longitude, 0, 'IP 粗略定位'))
+    .catch(() => { $('place').textContent = '定位失败'; });
+}
+
+$('btnRefresh').addEventListener('click', locate);
+locate();
+</script>
+</body>
+</html>
