@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>城市天气 · 时间</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --bg1: #1a1b26;
+    --bg2: #24283b;
+    --text: #e5e9f0;
+    --muted: #9aa5ce;
+    --accent: #7aa2f7;
+  }
+
+  body {
+    font-family: -apple-system, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+    background: transparent;
+    display: flex;
+    justify-content: center;
+    padding: 12px;
+    color: var(--text);
+  }
+
+  .card {
+    width: 340px;
+    border-radius: 20px;
+    padding: 22px 24px;
+    background: linear-gradient(145deg, var(--bg1), var(--bg2));
+    box-shadow: 0 8px 30px rgba(0,0,0,.35);
+    transition: background 1s;
+  }
+  .card.day   { --bg1: #2c4a7c; --bg2: #4a6ea9; --accent: #ffd166; }
+  .card.night { --bg1: #16182b; --bg2: #232742; }
+
+  /* 顶部：城市选择 */
+  .top { display: flex; align-items: center; gap: 8px; }
+  .city-input {
+    flex: 1;
+    background: rgba(255,255,255,.08);
+    border: 1px solid transparent;
+    border-radius: 10px;
+    padding: 7px 12px;
+    color: var(--text);
+    font-size: 14px;
+    outline: none;
+    transition: border-color .2s;
+  }
+  .city-input:focus { border-color: var(--accent); }
+  .city-input::placeholder { color: var(--muted); }
+
+  /* 天气主体 */
+  .weather { display: flex; align-items: center; gap: 16px; margin-top: 18px; }
+  .w-icon { font-size: 56px; line-height: 1; }
+  .w-temp { font-size: 52px; font-weight: 700; line-height: 1; }
+  .w-temp small { font-size: 22px; font-weight: 400; color: var(--muted); }
+  .w-desc { color: var(--muted); font-size: 14px; margin-top: 6px; }
+
+  .meta { display: flex; gap: 8px; margin-top: 14px; }
+  .chip {
+    background: rgba(255,255,255,.08);
+    border-radius: 999px;
+    padding: 4px 12px;
+    font-size: 12px;
+    color: var(--muted);
+  }
+
+  /* 时间 */
+  .divider { border: none; border-top: 1px solid rgba(255,255,255,.1); margin: 18px 0 14px; }
+  .clock { font-size: 34px; font-weight: 600; letter-spacing: 2px; font-variant-numeric: tabular-nums; }
+  .clock .sec { font-size: 18px; color: var(--accent); }
+  .date { color: var(--muted); font-size: 13px; margin-top: 4px; }
+
+  .status { font-size: 12px; color: var(--muted); margin-top: 12px; min-height: 14px; }
+  .status.error { color: #f7768e; }
+</style>
+</head>
+<body>
+  <div class="card" id="card">
+    <div class="top">
+      <input id="cityInput" class="city-input" placeholder="输入城市名，回车查询" list="cityList">
+      <datalist id="cityList">
+        <option value="北京"><option value="上海"><option value="广州"><option value="深圳">
+        <option value="杭州"><option value="成都"><option value="Tokyo"><option value="London">
+        <option value="New York"><option value="Paris">
+      </datalist>
+    </div>
+
+    <div class="weather">
+      <div class="w-icon" id="wIcon">⏳</div>
+      <div>
+        <div class="w-temp"><span id="wTemp">--</span><small>°C</small></div>
+        <div class="w-desc" id="wDesc">加载中…</div>
+      </div>
+    </div>
+    <div class="meta">
+      <span class="chip" id="wHumidity">湿度 --%</span>
+      <span class="chip" id="wWind">风速 -- km/h</span>
+      <span class="chip" id="cityLabel"></span>
+    </div>
+
+    <hr class="divider">
+    <div class="clock"><span id="clock">--:--</span><span class="sec" id="clockSec"></span></div>
+    <div class="date" id="dateLine"></div>
+
+    <div class="status" id="status"></div>
+  </div>
+
+<script>
+const $ = id => document.getElementById(id);
+
+// WMO 天气码 → 图标 + 描述
+const WMO = {
+  0:  ['☀️', '晴'],            1:  ['🌤️', '大部晴朗'],
+  2:  ['⛅', '局部多云'],       3:  ['☁️', '阴'],
+  45: ['🌫️', '雾'],            48: ['🌫️', '冻雾'],
+  51: ['🌦️', '小毛毛雨'],      53: ['🌦️', '毛毛雨'],     55: ['🌧️', '大毛毛雨'],
+  56: ['🌦️', '冻毛毛雨'],      57: ['🌧️', '强冻毛毛雨'],
+  61: ['🌧️', '小雨'],          63: ['🌧️', '中雨'],       65: ['🌧️', '大雨'],
+  66: ['🌧️', '冻雨'],          67: ['🌧️', '强冻雨'],
+  71: ['🌨️', '小雪'],          73: ['🌨️', '中雪'],       75: ['❄️', '大雪'],
+  77: ['❄️', '雪粒'],
+  80: ['🌦️', '小阵雨'],        81: ['🌧️', '阵雨'],       82: ['⛈️', '强阵雨'],
+  85: ['🌨️', '小阵雪'],        86: ['🌨️', '大阵雪'],
+  95: ['⛈️', '雷暴'],          96: ['⛈️', '雷暴伴冰雹'],  99: ['⛈️', '强雷暴伴冰雹'],
+};
+const wmo = c => WMO[c] || ['🌡️', '未知天气'];
+
+let state = { timezone: null, refreshTimer: null };
+
+async function loadCity(name) {
+  setStatus('查询中…');
+  try {
+    // 1. 城市名 → 经纬度 + 时区
+    const geo = await fetch(
+      `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(name)}&count=1&language=zh`
+    ).then(r => r.json());
+    const place = geo.results && geo.results[0];
+    if (!place) { setStatus(`找不到城市「${name}」`, true); return; }
+
+    // 2. 经纬度 → 当前天气
+    const wx = await fetch(
+      `https://api.open-meteo.com/v1/forecast?latitude=${place.latitude}&longitude=${place.longitude}` +
+      `&current=temperature_2m,weather_code,relative_humidity_2m,wind_speed_10m,is_day&timezone=auto`
+    ).then(r => r.json());
+
+    const cur = wx.current;
+    const [icon, desc] = wmo(cur.weather_code);
+
+    $('wIcon').textContent = icon;
+    $('wTemp').textContent = Math.round(cur.temperature_2m);
+    $('wDesc').textContent = desc;
+    $('wHumidity').textContent = `湿度 ${cur.relative_humidity_2m}%`;
+    $('wWind').textContent = `风速 ${Math.round(cur.wind_speed_10m)} km/h`;
+    $('cityLabel').textContent = `${place.name}${place.country ? ' · ' + place.country : ''}`;
+    $('card').className = 'card ' + (cur.is_day ? 'day' : 'night');
+
+    state.timezone = wx.timezone;
+    setStatus(`更新于 ${new Date().toLocaleTimeString('zh-CN')}`);
+    localStorage.setItem('widget-city', name);
+  } catch (e) {
+    setStatus('网络请求失败，请检查网络', true);
+  }
+}
+
+function setStatus(msg, isError = false) {
+  $('status').textContent = msg;
+  $('status').className = 'status' + (isError ? ' error' : '');
+}
+
+// 时钟：每秒按城市时区刷新
+function tick() {
+  if (!state.timezone) return;
+  const now = new Date();
+  const timeFmt = new Intl.DateTimeFormat('zh-CN', {
+    timeZone: state.timezone, hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false,
+  });
+  const parts = Object.fromEntries(timeFmt.formatToParts(now).map(p => [p.type, p.value]));
+  $('clock').textContent = `${parts.hour}:${parts.minute}`;
+  $('clockSec').textContent = `:${parts.second}`;
+  $('dateLine').textContent = new Intl.DateTimeFormat('zh-CN', {
+    timeZone: state.timezone, year: 'numeric', month: 'long', day: 'numeric', weekday: 'long',
+  }).format(now);
+}
+setInterval(tick, 1000);
+
+// 城市输入
+$('cityInput').addEventListener('keydown', e => {
+  if (e.key === 'Enter') {
+    const v = e.target.value.trim();
+    if (v) loadCity(v);
+  }
+});
+
+// 启动：URL 参数 > 上次选择 > 默认北京
+const initCity = new URLSearchParams(location.search).get('city')
+  || localStorage.getItem('widget-city') || '北京';
+$('cityInput').value = initCity;
+loadCity(initCity);
+setInterval(() => loadCity($('cityInput').value.trim() || initCity), 10 * 60 * 1000); // 每 10 分钟刷新天气
+</script>
+</body>
+</html>
