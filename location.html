@@ -149,10 +149,16 @@ function locate() {
 
 function fallbackIP() {
   // iframe 不授权定位时的兜底：IP 定位（城市级，走代理时会显示节点位置）
-  fetch('https://freeipapi.com/api/json')
+  // 依次尝试两个服务商，都失败则显示真实错误
+  fetch('https://api.bigdatacloud.net/data/ip-geolocation?localityLanguage=zh')
     .then(r => r.json())
     .then(d => show(d.latitude, d.longitude, 0, 'IP 粗略定位'))
-    .catch(() => { $('place').textContent = '定位失败'; });
+    .catch(e1 => {
+      fetch('https://freeipapi.com/api/json')
+        .then(r => r.json())
+        .then(d => show(d.latitude, d.longitude, 0, 'IP 粗略定位'))
+        .catch(e2 => { $('place').textContent = '定位失败：' + (e2 && e2.message || '网络错误'); });
+    });
 }
 
 $('btnRefresh').addEventListener('click', locate);
