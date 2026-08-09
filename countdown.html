@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>倒数日</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: -apple-system, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+    background: #ffffff;
+    display: flex;
+    justify-content: center;
+    padding: 12px;
+    color: #1d1d1f;
+  }
+
+  /* 日历卡片：上 1/6 蓝 / 中 3/5 白或照片 / 下 1/5 浅灰 */
+  .cal {
+    position: relative;
+    width: 280px;
+    height: 330px;
+    border-radius: 16px;
+    overflow: hidden;
+    border: 1px solid #ececf0;
+    box-shadow: 0 2px 12px rgba(0,0,0,.06);
+    display: flex;
+    flex-direction: column;
+  }
+
+  .band {
+    flex: 5;
+    background: #3b82f6;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 15px;
+    font-weight: 600;
+    text-align: center;
+    padding: 0 32px;
+    overflow: hidden;
+  }
+
+  .mid {
+    flex: 19;
+    background: #ffffff center / cover no-repeat;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+  }
+  .mid .label { font-size: 13px; color: #8a8a8e; }
+  .mid .days { font-size: 72px; font-weight: 800; line-height: 1; letter-spacing: -1px; }
+  .mid .days .unit { font-size: 16px; font-weight: 400; color: #8a8a8e; margin-left: 3px; }
+  /* 有背景照片时保证文字可读 */
+  .mid.has-bg { box-shadow: inset 0 0 0 1000px rgba(0,0,0,.25); }
+  .mid.has-bg .label,
+  .mid.has-bg .days { color: #fff; text-shadow: 0 1px 8px rgba(0,0,0,.55); }
+  .mid.has-bg .days .unit { color: rgba(255,255,255,.85); }
+
+  .bottom {
+    flex: 6;
+    background: #f6f6f8;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    color: #6e6e73;
+  }
+
+  /* 设置按钮 + 面板 */
+  .gear {
+    position: absolute;
+    top: 5px;
+    right: 8px;
+    border: none;
+    background: none;
+    color: rgba(255,255,255,.85);
+    font-size: 14px;
+    cursor: pointer;
+    padding: 2px 4px;
+    border-radius: 6px;
+  }
+  .gear:hover { background: rgba(255,255,255,.18); }
+
+  .panel {
+    position: absolute;
+    inset: 0;
+    background: rgba(255,255,255,.97);
+    display: none;
+    flex-direction: column;
+    justify-content: center;
+    gap: 10px;
+    padding: 22px;
+    z-index: 2;
+  }
+  .panel.open { display: flex; }
+  .panel label { font-size: 12px; color: #6e6e73; }
+  .panel input[type=text], .panel input[type=date] {
+    width: 100%;
+    border: 1px solid #e0e0e4;
+    border-radius: 8px;
+    padding: 7px 10px;
+    font-size: 13px;
+    outline: none;
+    color: #1d1d1f;
+  }
+  .panel input:focus { border-color: #3b82f6; }
+  .panel input[type=file] { font-size: 12px; color: #6e6e73; }
+  .panel .row { display: flex; gap: 8px; margin-top: 4px; }
+  .panel button {
+    flex: 1;
+    border: none;
+    border-radius: 8px;
+    padding: 8px 0;
+    font-size: 13px;
+    cursor: pointer;
+  }
+  .btn-save { background: #3b82f6; color: #fff; }
+  .btn-clear { background: #f0f0f2; color: #6e6e73; }
+</style>
+</head>
+<body>
+  <div class="cal">
+    <div class="band" id="eventName">倒数日</div>
+    <button class="gear" id="gearBtn" title="设置">⚙️</button>
+    <div class="mid" id="mid">
+      <div class="label" id="cdLabel">还有</div>
+      <div class="days"><span id="cdDays">--</span><span class="unit">天</span></div>
+    </div>
+    <div class="bottom" id="targetLine"></div>
+
+    <div class="panel" id="panel">
+      <label>事件名称</label>
+      <input type="text" id="inName" maxlength="20" placeholder="例如：她的生日">
+      <label>事件日期</label>
+      <input type="date" id="inDate">
+      <label>背景照片（可选，从本地选择）</label>
+      <input type="file" id="inPhoto" accept="image/*">
+      <div class="row">
+        <button class="btn-clear" id="btnClear">清除照片</button>
+        <button class="btn-save" id="btnSave">保存</button>
+      </div>
+    </div>
+  </div>
+
+<script>
+const $ = id => document.getElementById(id);
+const DOW = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'];
+const params = new URLSearchParams(location.search);
+
+// 配置优先级：URL 参数 > 本地保存 > 默认值
+function getCfg() {
+  return {
+    name: params.get('name') || localStorage.getItem('cd-name') || '倒数日',
+    date: params.get('date') || localStorage.getItem('cd-date') || '2027-01-01',
+    bg:   params.get('bg')   || localStorage.getItem('cd-bg')   || '',
+  };
+}
+
+function render() {
+  const cfg = getCfg();
+  $('eventName').textContent = cfg.name;
+
+  // 按天数计算：今天午夜 → 目标日午夜
+  const today = new Date(); today.setHours(0, 0, 0, 0);
+  const target = new Date(cfg.date + 'T00:00:00');
+  if (isNaN(target)) { $('cdLabel').textContent = '日期无效'; $('cdDays').textContent = '--'; return; }
+
+  const diff = Math.round((target - today) / 86400000);
+  if (diff > 0)      { $('cdLabel').textContent = '还有';   $('cdDays').textContent = diff; }
+  else if (diff < 0) { $('cdLabel').textContent = '已经';   $('cdDays').textContent = -diff; }
+  else               { $('cdLabel').textContent = '就是今天'; $('cdDays').textContent = 0; }
+
+  $('targetLine').textContent =
+    `目标日：${target.getFullYear()}-${target.getMonth() + 1}-${target.getDate()} ${DOW[target.getDay()]}`;
+
+  const mid = $('mid');
+  if (cfg.bg) {
+    mid.style.backgroundImage = `url("${cfg.bg}")`;
+    mid.classList.add('has-bg');
+  } else {
+    mid.style.backgroundImage = '';
+    mid.classList.remove('has-bg');
+  }
+}
+
+// 设置面板
+$('gearBtn').addEventListener('click', () => {
+  const cfg = getCfg();
+  $('inName').value = cfg.name;
+  $('inDate').value = cfg.date;
+  $('panel').classList.add('open');
+});
+
+$('btnSave').addEventListener('click', () => {
+  const name = $('inName').value.trim();
+  const date = $('inDate').value;
+  if (name) localStorage.setItem('cd-name', name);
+  if (date) localStorage.setItem('cd-date', date);
+
+  const file = $('inPhoto').files[0];
+  if (file) {
+    const reader = new FileReader();
+    reader.onload = () => {
+      try { localStorage.setItem('cd-bg', reader.result); } catch (e) { /* 照片过大则忽略 */ }
+      finish();
+    };
+    reader.readAsDataURL(file);
+  } else {
+    finish();
+  }
+  function finish() {
+    $('panel').classList.remove('open');
+    render();
+  }
+});
+
+$('btnClear').addEventListener('click', () => {
+  localStorage.removeItem('cd-bg');
+  $('inPhoto').value = '';
+  render();
+});
+
+render();
+setInterval(render, 60 * 1000); // 每分钟重算，跨天自动更新
+</script>
+</body>
+</html>
