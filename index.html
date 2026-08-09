@@ -26,33 +26,22 @@
     box-shadow: 0 2px 12px rgba(0,0,0,.04);
   }
 
-  /* 头部：城市 + 图标 */
-  .head { display: flex; justify-content: space-between; align-items: flex-start; }
+  /* 主体一行三列：左=图标+地区，中=时间，右=大温度 */
+  .mainrow { display: flex; align-items: center; justify-content: space-between; }
+  .cityline { display: flex; align-items: center; gap: 10px; }
+  .w-icon { font-size: 34px; line-height: 1; }
   .city { font-size: 15px; font-weight: 700; }
   .city .country { font-weight: 400; color: #8a8a8e; font-size: 11.5px; margin-left: 4px; }
   .desc { color: #8a8a8e; font-size: 12px; margin-top: 3px; }
-  .head .w-icon { font-size: 36px; line-height: 1; }
 
-  /* 大温度 + 时间 */
-  .main { display: flex; align-items: flex-end; gap: 22px; margin-top: 4px; }
-  .temp { font-size: 54px; font-weight: 800; line-height: 1; letter-spacing: -1.5px; }
-  .temp .deg { font-weight: 800; }
-  .temp .unit { font-size: 15px; font-weight: 400; color: #8a8a8e; margin-left: 2px; }
-  .clockbox { padding-bottom: 6px; }
+  .col-mid { text-align: center; }
   .clock { font-size: 21px; font-weight: 600; font-variant-numeric: tabular-nums; letter-spacing: 1px; }
   .clock .sec { font-size: 12.5px; color: #8a8a8e; }
   .date { color: #8a8a8e; font-size: 11px; margin-top: 2px; }
 
-  /* 三个信息框 */
-  .stats { display: flex; gap: 10px; margin-top: 13px; }
-  .stat {
-    flex: 1;
-    background: #f4f4f6;
-    border-radius: 10px;
-    padding: 8px 12px 7px;
-  }
-  .stat .label { color: #8a8a8e; font-size: 11px; }
-  .stat .value { font-size: 14px; font-weight: 700; margin-top: 3px; }
+  .temp { font-size: 54px; font-weight: 800; line-height: 1; letter-spacing: -1.5px; }
+  .temp .deg { font-weight: 800; }
+  .temp .unit { font-size: 15px; font-weight: 400; color: #8a8a8e; margin-left: 2px; }
 
   /* 分割线 + 5 天预报 */
   .divider { border: none; border-top: 1px solid #ececf0; margin: 14px 0 10px; }
@@ -82,26 +71,19 @@
 </head>
 <body>
   <div class="card">
-    <div class="head">
-      <div>
-        <div class="city"><span id="cityName">--</span><span class="country" id="countryName"></span></div>
-        <div class="desc" id="wDesc">加载中…</div>
+    <div class="mainrow">
+      <div class="cityline">
+        <span class="w-icon" id="wIcon">⏳</span>
+        <div>
+          <div class="city"><span id="cityName">--</span><span class="country" id="countryName"></span></div>
+          <div class="desc" id="wDesc">加载中…</div>
+        </div>
       </div>
-      <div class="w-icon" id="wIcon">⏳</div>
-    </div>
-
-    <div class="main">
-      <div class="temp"><span id="wTemp">--</span><span class="deg">°</span><span class="unit">C</span></div>
-      <div class="clockbox">
+      <div class="col-mid">
         <div class="clock"><span id="clock">--:--</span><span class="sec" id="clockSec"></span></div>
         <div class="date" id="dateLine"></div>
       </div>
-    </div>
-
-    <div class="stats">
-      <div class="stat"><div class="label">湿度</div><div class="value" id="wHumidity">--%</div></div>
-      <div class="stat"><div class="label">风速</div><div class="value" id="wWind">-- km/h</div></div>
-      <div class="stat"><div class="label">最高 / 最低</div><div class="value" id="wHL">--° / --°</div></div>
+      <div class="temp"><span id="wTemp">--</span><span class="deg">°</span><span class="unit">C</span></div>
     </div>
 
     <hr class="divider">
@@ -149,7 +131,7 @@ async function loadCity(name) {
     // 2. 经纬度 → 当前天气 + 5 天预报
     const wx = await fetch(
       `https://api.open-meteo.com/v1/forecast?latitude=${place.latitude}&longitude=${place.longitude}` +
-      `&current=temperature_2m,weather_code,relative_humidity_2m,wind_speed_10m` +
+      `&current=temperature_2m,weather_code` +
       `&daily=weather_code,temperature_2m_max,temperature_2m_min&forecast_days=5&timezone=auto`
     ).then(r => r.json());
 
@@ -161,9 +143,6 @@ async function loadCity(name) {
     $('wIcon').textContent = icon;
     $('wTemp').textContent = Math.round(cur.temperature_2m);
     $('wDesc').textContent = desc;
-    $('wHumidity').textContent = cur.relative_humidity_2m + '%';
-    $('wWind').textContent = Math.round(cur.wind_speed_10m) + ' km/h';
-    $('wHL').textContent = `${Math.round(wx.daily.temperature_2m_max[0])}° / ${Math.round(wx.daily.temperature_2m_min[0])}°`;
 
     // 5 天预报
     $('forecast').innerHTML = wx.daily.time.map((t, i) => {
