@@ -17,66 +17,66 @@
   }
 
   .card {
-    width: 560px;
+    width: 480px;
     max-width: 100%;
     background: #ffffff;
     border: 1px solid #ececf0;
-    border-radius: 18px;
-    padding: 30px 34px 26px;
+    border-radius: 16px;
+    padding: 20px 24px 16px;
     box-shadow: 0 2px 12px rgba(0,0,0,.04);
   }
 
   /* 头部：城市 + 图标 */
   .head { display: flex; justify-content: space-between; align-items: flex-start; }
-  .city { font-size: 17px; font-weight: 700; }
-  .city .country { font-weight: 400; color: #8a8a8e; font-size: 13px; margin-left: 4px; }
-  .desc { color: #8a8a8e; font-size: 13.5px; margin-top: 4px; }
-  .head .w-icon { font-size: 46px; line-height: 1; }
+  .city { font-size: 15px; font-weight: 700; }
+  .city .country { font-weight: 400; color: #8a8a8e; font-size: 11.5px; margin-left: 4px; }
+  .desc { color: #8a8a8e; font-size: 12px; margin-top: 3px; }
+  .head .w-icon { font-size: 36px; line-height: 1; }
 
   /* 大温度 + 时间 */
-  .main { display: flex; align-items: flex-end; gap: 28px; margin-top: 6px; }
-  .temp { font-size: 84px; font-weight: 800; line-height: 1; letter-spacing: -2px; }
+  .main { display: flex; align-items: flex-end; gap: 22px; margin-top: 4px; }
+  .temp { font-size: 54px; font-weight: 800; line-height: 1; letter-spacing: -1.5px; }
   .temp .deg { font-weight: 800; }
-  .temp .unit { font-size: 20px; font-weight: 400; color: #8a8a8e; margin-left: 2px; }
-  .clockbox { padding-bottom: 10px; }
-  .clock { font-size: 26px; font-weight: 600; font-variant-numeric: tabular-nums; letter-spacing: 1px; }
-  .clock .sec { font-size: 15px; color: #8a8a8e; }
-  .date { color: #8a8a8e; font-size: 12.5px; margin-top: 3px; }
+  .temp .unit { font-size: 15px; font-weight: 400; color: #8a8a8e; margin-left: 2px; }
+  .clockbox { padding-bottom: 6px; }
+  .clock { font-size: 21px; font-weight: 600; font-variant-numeric: tabular-nums; letter-spacing: 1px; }
+  .clock .sec { font-size: 12.5px; color: #8a8a8e; }
+  .date { color: #8a8a8e; font-size: 11px; margin-top: 2px; }
 
   /* 三个信息框 */
-  .stats { display: flex; gap: 12px; margin-top: 20px; }
+  .stats { display: flex; gap: 10px; margin-top: 13px; }
   .stat {
     flex: 1;
     background: #f4f4f6;
-    border-radius: 12px;
-    padding: 14px 16px 12px;
+    border-radius: 10px;
+    padding: 8px 12px 7px;
   }
-  .stat .label { color: #8a8a8e; font-size: 13px; }
-  .stat .value { font-size: 17px; font-weight: 700; margin-top: 5px; }
+  .stat .label { color: #8a8a8e; font-size: 11px; }
+  .stat .value { font-size: 14px; font-weight: 700; margin-top: 3px; }
 
   /* 分割线 + 5 天预报 */
-  .divider { border: none; border-top: 1px solid #ececf0; margin: 20px 0 14px; }
+  .divider { border: none; border-top: 1px solid #ececf0; margin: 14px 0 10px; }
   .forecast { display: flex; justify-content: space-between; }
   .day { text-align: center; flex: 1; }
-  .day .dow { color: #8a8a8e; font-size: 13px; }
-  .day .d-icon { font-size: 24px; margin: 8px 0 6px; }
-  .day .hl { font-size: 13.5px; font-weight: 600; }
+  .day .dow { color: #8a8a8e; font-size: 11.5px; }
+  .day .d-icon { font-size: 19px; margin: 5px 0 4px; }
+  .day .hl { font-size: 12px; font-weight: 600; }
   .day .hl .lo { color: #8a8a8e; font-weight: 500; }
 
   /* 底部：换城市 + 状态 */
-  .foot { display: flex; justify-content: space-between; align-items: center; margin-top: 16px; }
+  .foot { display: flex; justify-content: space-between; align-items: center; margin-top: 11px; }
   .city-input {
     border: none;
     background: #f4f4f6;
-    border-radius: 8px;
-    padding: 5px 10px;
-    font-size: 12px;
+    border-radius: 7px;
+    padding: 4px 9px;
+    font-size: 11px;
     color: #1d1d1f;
-    width: 130px;
+    width: 120px;
     outline: none;
   }
   .city-input::placeholder { color: #aeaeb2; }
-  .status { font-size: 11px; color: #aeaeb2; }
+  .status { font-size: 10px; color: #aeaeb2; }
   .status.error { color: #e64545; }
 </style>
 </head>
