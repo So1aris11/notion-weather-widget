@@ -157,7 +157,7 @@ async function loadCity(name) {
 
     state.timezone = wx.timezone;
     setStatus(`更新于 ${new Date().toLocaleTimeString('zh-CN')}`);
-    localStorage.setItem('widget-city', name);
+    localStorage.setItem(storeKey, name);
   } catch (e) {
     setStatus('网络请求失败，请检查网络', true);
   }
@@ -192,11 +192,13 @@ $('cityInput').addEventListener('keydown', e => {
   }
 });
 
-// 启动：URL 参数 > 上次选择 > 默认北京
-const initCity = new URLSearchParams(location.search).get('city')
-  || localStorage.getItem('widget-city') || '北京';
+// 启动：本实例上次手动选择 > URL 固定城市 > 默认北京
+// id 参数区分同一页面里的多个插件实例，各自独立记住手动切换的城市，互不影响
+const params = new URLSearchParams(location.search);
+const storeKey = 'widget-city' + (params.get('id') ? '-' + params.get('id') : '');
+const initCity = localStorage.getItem(storeKey) || params.get('city') || '北京';
 loadCity(initCity);
-setInterval(() => loadCity(localStorage.getItem('widget-city') || initCity), 10 * 60 * 1000); // 每 10 分钟刷新天气
+setInterval(() => loadCity(localStorage.getItem(storeKey) || initCity), 10 * 60 * 1000); // 每 10 分钟刷新天气
 </script>
 </body>
 </html>
