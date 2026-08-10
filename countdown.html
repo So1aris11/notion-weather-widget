@@ -12,17 +12,18 @@
     background: #ffffff;
     display: flex;
     justify-content: center;
+    align-items: center;
+    min-height: 100vh;
     padding: 12px;
     color: #1d1d1f;
   }
 
   /* 日历卡片：上 1/6 蓝 / 中 3/5 白或照片 / 下 1/5 浅灰，长宽比 4:3。
-     宽度跟随嵌入窗口（最大 280px），高度用 aspect-ratio 保持 4:3，
-     字号用 clamp() 随宽度平滑缩放，窄窗口不溢出 */
+     宽度跟随嵌入窗口（最大 280px），窗口太矮时按高度反推宽度，
+     高度用 aspect-ratio 保持 4:3，字号 clamp() + min(vw, vh) 双向缩放 */
   .cal {
     position: relative;
-    width: 100%;
-    max-width: 280px;
+    width: min(100%, 280px, (100vh - 24px) * 4 / 3);
     aspect-ratio: 4 / 3;
     border-radius: 14px;
     overflow: hidden;
@@ -39,7 +40,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: clamp(10px, 4vw, 13px);
+    font-size: clamp(10px, min(4vw, 6vh), 13px);
     font-weight: 500;
     text-align: center;
     padding: 0 clamp(14px, 10vw, 32px);
@@ -55,8 +56,8 @@
     justify-content: center;
     gap: 3px;
   }
-  .mid .label { font-size: clamp(9px, 3.4vw, 11px); color: #8a8a8e; font-weight: 400; }
-  .mid .days { font-size: clamp(30px, 18vw, 58px); font-weight: 600; line-height: 1; letter-spacing: -0.5px; }
+  .mid .label { font-size: clamp(9px, min(3.4vw, 5vh), 11px); color: #8a8a8e; font-weight: 400; }
+  .mid .days { font-size: clamp(28px, min(18vw, 25vh), 58px); font-weight: 600; line-height: 1; letter-spacing: -0.5px; }
   .mid .days .unit { font-size: 0.23em; font-weight: 400; color: #8a8a8e; margin-left: 3px; }
   /* 有背景照片时保证文字可读 */
   .mid.has-bg { box-shadow: inset 0 0 0 1000px rgba(0,0,0,.25); }
@@ -70,7 +71,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: clamp(8.5px, 3.2vw, 10.5px);
+    font-size: clamp(8.5px, min(3.2vw, 4.8vh), 10.5px);
     color: #6e6e73;
   }
 

@@ -12,19 +12,21 @@
     background: #ffffff;
     display: flex;
     justify-content: center;
+    align-items: center;
+    min-height: 100vh;
     padding: 12px;
     color: #1d1d1f;
   }
 
-  /* 卡片宽度跟随嵌入窗口，字号用 clamp() 随宽度平滑缩放，
-     窄窗口（Notion 分栏/小屏）不溢出，宽窗口也不会拉伸变形 */
+  /* 卡片宽度跟随嵌入窗口，字号用 clamp() + min(vw, vh) 双向约束：
+     窗口窄或矮都会平滑缩小，不裁切、不留大片空白 */
   .card {
     width: 100%;
     max-width: 560px;
     background: #ffffff;
     border: 1px solid #ececf0;
     border-radius: 16px;
-    padding: clamp(12px, 4vw, 20px) clamp(14px, 5vw, 24px) clamp(10px, 3.5vw, 16px);
+    padding: clamp(10px, min(4vw, 9vh), 20px) clamp(14px, 5vw, 24px) clamp(8px, min(3.5vw, 7.5vh), 16px);
     box-shadow: 0 2px 12px rgba(0,0,0,.04);
   }
 
@@ -32,31 +34,31 @@
   .mainrow { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
   .cityline { display: flex; align-items: center; gap: 10px; min-width: 0; }
   .cityline > div { min-width: 0; }
-  .w-icon { font-size: clamp(24px, 7vw, 34px); line-height: 1; }
-  .city { font-size: clamp(13px, 3.4vw, 15px); font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .w-icon { font-size: clamp(22px, min(7vw, 15vh), 34px); line-height: 1; }
+  .city { font-size: clamp(12px, min(3.4vw, 7vh), 15px); font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .city .country { font-weight: 400; color: #8a8a8e; font-size: 0.78em; margin-left: 4px; }
-  .desc { color: #8a8a8e; font-size: clamp(10px, 2.6vw, 12px); margin-top: 3px; }
+  .desc { color: #8a8a8e; font-size: clamp(9px, min(2.6vw, 5.5vh), 12px); margin-top: 3px; }
 
   .col-mid { text-align: center; flex-shrink: 0; }
-  .clock { font-size: clamp(15px, 4.5vw, 21px); font-weight: 600; font-variant-numeric: tabular-nums; letter-spacing: 1px; }
+  .clock { font-size: clamp(14px, min(4.5vw, 9.5vh), 21px); font-weight: 600; font-variant-numeric: tabular-nums; letter-spacing: 1px; }
   .clock .sec { font-size: 0.6em; color: #8a8a8e; }
-  .date { color: #8a8a8e; font-size: clamp(9px, 2.4vw, 11px); margin-top: 2px; white-space: nowrap; }
+  .date { color: #8a8a8e; font-size: clamp(9px, min(2.4vw, 5vh), 11px); margin-top: 2px; white-space: nowrap; }
 
-  .temp { font-size: clamp(30px, 11vw, 54px); font-weight: 800; line-height: 1; letter-spacing: -1.5px; flex-shrink: 0; }
+  .temp { font-size: clamp(26px, min(11vw, 23vh), 54px); font-weight: 800; line-height: 1; letter-spacing: -1.5px; flex-shrink: 0; }
   .temp .deg { font-weight: 800; }
   .temp .unit { font-size: 0.28em; font-weight: 400; color: #8a8a8e; margin-left: 2px; }
 
   /* 分割线 + 5 天预报 */
-  .divider { border: none; border-top: 1px solid #ececf0; margin: clamp(9px, 3vw, 14px) 0 clamp(6px, 2.2vw, 10px); }
+  .divider { border: none; border-top: 1px solid #ececf0; margin: clamp(7px, min(3vw, 6.5vh), 14px) 0 clamp(5px, min(2.2vw, 4.5vh), 10px); }
   .forecast { display: flex; justify-content: space-between; }
   .day { text-align: center; flex: 1; min-width: 0; }
-  .day .dow { color: #8a8a8e; font-size: clamp(9.5px, 2.6vw, 11.5px); }
-  .day .d-icon { font-size: clamp(14px, 4vw, 19px); margin: 5px 0 4px; }
-  .day .hl { font-size: clamp(10px, 2.8vw, 12px); font-weight: 600; }
+  .day .dow { color: #8a8a8e; font-size: clamp(9px, min(2.6vw, 5.5vh), 11.5px); }
+  .day .d-icon { font-size: clamp(13px, min(4vw, 8.5vh), 19px); margin: clamp(2px, min(1vw, 2vh), 5px) 0 clamp(2px, min(0.8vw, 1.6vh), 4px); }
+  .day .hl { font-size: clamp(9.5px, min(2.8vw, 5.8vh), 12px); font-weight: 600; }
   .day .hl .lo { color: #8a8a8e; font-weight: 500; }
 
   /* 底部：换城市 + 状态 */
-  .foot { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-top: 11px; }
+  .foot { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-top: clamp(6px, min(2.4vw, 5vh), 11px); }
   .city-input {
     border: none;
     background: #f4f4f6;
@@ -69,9 +71,13 @@
     outline: none;
   }
 
-  /* 窗口过窄时：隐藏中间的时钟列，保证天气主体不挤压溢出 */
+  /* 窗口过窄：隐藏中间的时钟列，保证天气主体不挤压溢出 */
   @media (max-width: 340px) {
     .col-mid { display: none; }
+  }
+  /* 窗口过矮：隐藏 5 天预报，只留当天天气 + 时钟 */
+  @media (max-height: 150px) {
+    .divider, .forecast { display: none; }
   }
   .city-input::placeholder { color: #aeaeb2; }
   .status { font-size: 10px; color: #aeaeb2; }
