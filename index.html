@@ -16,44 +16,47 @@
     color: #1d1d1f;
   }
 
+  /* 卡片宽度跟随嵌入窗口，字号用 clamp() 随宽度平滑缩放，
+     窄窗口（Notion 分栏/小屏）不溢出，宽窗口也不会拉伸变形 */
   .card {
-    width: 480px;
-    max-width: 100%;
+    width: 100%;
+    max-width: 560px;
     background: #ffffff;
     border: 1px solid #ececf0;
     border-radius: 16px;
-    padding: 20px 24px 16px;
+    padding: clamp(12px, 4vw, 20px) clamp(14px, 5vw, 24px) clamp(10px, 3.5vw, 16px);
     box-shadow: 0 2px 12px rgba(0,0,0,.04);
   }
 
   /* 主体一行三列：左=图标+地区，中=时间，右=大温度 */
-  .mainrow { display: flex; align-items: center; justify-content: space-between; }
-  .cityline { display: flex; align-items: center; gap: 10px; }
-  .w-icon { font-size: 34px; line-height: 1; }
-  .city { font-size: 15px; font-weight: 700; }
-  .city .country { font-weight: 400; color: #8a8a8e; font-size: 11.5px; margin-left: 4px; }
-  .desc { color: #8a8a8e; font-size: 12px; margin-top: 3px; }
+  .mainrow { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+  .cityline { display: flex; align-items: center; gap: 10px; min-width: 0; }
+  .cityline > div { min-width: 0; }
+  .w-icon { font-size: clamp(24px, 7vw, 34px); line-height: 1; }
+  .city { font-size: clamp(13px, 3.4vw, 15px); font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .city .country { font-weight: 400; color: #8a8a8e; font-size: 0.78em; margin-left: 4px; }
+  .desc { color: #8a8a8e; font-size: clamp(10px, 2.6vw, 12px); margin-top: 3px; }
 
-  .col-mid { text-align: center; }
-  .clock { font-size: 21px; font-weight: 600; font-variant-numeric: tabular-nums; letter-spacing: 1px; }
-  .clock .sec { font-size: 12.5px; color: #8a8a8e; }
-  .date { color: #8a8a8e; font-size: 11px; margin-top: 2px; }
+  .col-mid { text-align: center; flex-shrink: 0; }
+  .clock { font-size: clamp(15px, 4.5vw, 21px); font-weight: 600; font-variant-numeric: tabular-nums; letter-spacing: 1px; }
+  .clock .sec { font-size: 0.6em; color: #8a8a8e; }
+  .date { color: #8a8a8e; font-size: clamp(9px, 2.4vw, 11px); margin-top: 2px; white-space: nowrap; }
 
-  .temp { font-size: 54px; font-weight: 800; line-height: 1; letter-spacing: -1.5px; }
+  .temp { font-size: clamp(30px, 11vw, 54px); font-weight: 800; line-height: 1; letter-spacing: -1.5px; flex-shrink: 0; }
   .temp .deg { font-weight: 800; }
-  .temp .unit { font-size: 15px; font-weight: 400; color: #8a8a8e; margin-left: 2px; }
+  .temp .unit { font-size: 0.28em; font-weight: 400; color: #8a8a8e; margin-left: 2px; }
 
   /* 分割线 + 5 天预报 */
-  .divider { border: none; border-top: 1px solid #ececf0; margin: 14px 0 10px; }
+  .divider { border: none; border-top: 1px solid #ececf0; margin: clamp(9px, 3vw, 14px) 0 clamp(6px, 2.2vw, 10px); }
   .forecast { display: flex; justify-content: space-between; }
-  .day { text-align: center; flex: 1; }
-  .day .dow { color: #8a8a8e; font-size: 11.5px; }
-  .day .d-icon { font-size: 19px; margin: 5px 0 4px; }
-  .day .hl { font-size: 12px; font-weight: 600; }
+  .day { text-align: center; flex: 1; min-width: 0; }
+  .day .dow { color: #8a8a8e; font-size: clamp(9.5px, 2.6vw, 11.5px); }
+  .day .d-icon { font-size: clamp(14px, 4vw, 19px); margin: 5px 0 4px; }
+  .day .hl { font-size: clamp(10px, 2.8vw, 12px); font-weight: 600; }
   .day .hl .lo { color: #8a8a8e; font-weight: 500; }
 
   /* 底部：换城市 + 状态 */
-  .foot { display: flex; justify-content: space-between; align-items: center; margin-top: 11px; }
+  .foot { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-top: 11px; }
   .city-input {
     border: none;
     background: #f4f4f6;
@@ -62,7 +65,13 @@
     font-size: 11px;
     color: #1d1d1f;
     width: 120px;
+    max-width: 45%;
     outline: none;
+  }
+
+  /* 窗口过窄时：隐藏中间的时钟列，保证天气主体不挤压溢出 */
+  @media (max-width: 340px) {
+    .col-mid { display: none; }
   }
   .city-input::placeholder { color: #aeaeb2; }
   .status { font-size: 10px; color: #aeaeb2; }
